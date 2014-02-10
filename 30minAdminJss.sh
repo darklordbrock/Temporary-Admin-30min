@@ -11,15 +11,50 @@
 # at the Univeristy of Wisconsin Milwaukee
 ##############
 
-U=`who |grep console| awk '{print $1}'`
+######
+U=`who | grep console | awk '{print $1}'`
+CD="/Applications/Utilities/CocoaDialog.app/Contents/MacOS/CocoaDialog"
+CDI="/Applications/Utilities/CocoaDialog.app/Contents/Resources"
+######
 
-# Message to user they have admin rights for 30 min. 
-/usr/bin/osascript <<-EOF
-			    tell application "System Events"
-			        activate
-			        display dialog "You now have admin rights to this machine for 30 minutes" buttons {"Let Me at it."} default button 1
-			    end tell
-			EOF
+if [[ ! -f /var/.uitsAdminAgreement ]]; then
+
+    agreement=`$CD standard-inputbox --title "Admin Agreement" --float --informative-text "A base image was installed with software supported by UITS and that, in the event of problems, the base image will be reinstalled; overwriting any software I have installed or configuration changes I have made. I understand that NO locally saved data on the machine will be backed up and restored by UITS if a base image reinstall is required. I will only install software properly licensed for use by the University and its employees and will not install any unlicensed software on this computer. I will not attempt to disable/uninstall any software that has been put into place to maintain security (i.e. automatic updates, antivirus application, etc.) If you agree with the above, then please type in agree all in lowercase."`
+
+    echo $agreement
+
+    if [[ $agreement = "1 agree" ]]; then
+
+        echo "Client has agreed."
+
+        echo $U >> /var/.uitsAdminAgreement
+
+        touch /Library/Application\ Support/JAMF/Receipts/TempAdminAuth.dmg
+
+    else
+
+        echo "Client did not agree"
+
+        exit 0
+
+    fi
+
+else
+
+    atItAgain=`$CD ok-msgbox --title "Temporary Admin" --float --text "Temporary Admin for 30 mintues" --informative-text "You will now have admin rights to this machine for 30 mintures."`
+
+    if [[ $atItAgain = "1" ]]; then
+
+        echo "Client clicked ok"
+
+    else
+
+        echo "Client clicked canel"
+        exit 0
+
+    fi
+
+fi
 
 # Place launchD plist to call JSS policy to remove admin rights.
 #####
@@ -59,6 +94,9 @@ echo $TIME " by " $U >> /var/uits/30minAdmin.txt
 
 echo $U >> /var/uits/userToRemove
 
+touch /Library/Application\ Support/JAMF/Receipts/TempAdminInUse.dmg
+
 # give current logged user admin rights
 /usr/sbin/dseditgroup -o edit -a $U -t user admin
+
 exit 0
