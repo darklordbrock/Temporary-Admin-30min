@@ -15,18 +15,23 @@
 ##############
 
 if [[ -f /var/uits/userToRemove ]]; then
-	U=`cat /var/uits/userToRemove`
-	echo "removing" $U "from admin group"
-	#dscl . -delete /Groups/admin GroupMembership $U
-	/usr/sbin/dseditgroup -o edit -d $U -t user admin
-	echo $U "has been removed from admin group"
-	rm -f /var/uits/userToRemove
+
+    U=`cat /var/uits/userToRemove`
+    echo "removing" $U "from admin group"
+    #dscl . -delete /Groups/admin GroupMembership $U
+    /usr/sbin/dseditgroup -o edit -d $U -t user admin
+    echo $U "has been removed from admin group"
+    rm -f /var/uits/userToRemove
+    rm -f /Library/Application\ Support/JAMF/Receipts/TempAdminInUse.dmg
+
 else
-	defaults write /Library/LaunchDaemons/edu.uwm.uits.brockma9.adminremove.plist disabled -bool true
-	echo "going to unload"
-	launchctl unload -w /Library/LaunchDaemons/edu.uwm.uits.brockma9.adminremove.plist
-	echo "Completed"
-	rm -f /Library/LaunchDaemons/edu.uwm.uits.brockma9.adminremove.plist
+
+    defaults write /Library/LaunchDaemons/edu.uwm.uits.brockma9.adminremove.plist disabled -bool true
+    echo "going to unload"
+    launchctl unload -w /Library/LaunchDaemons/edu.uwm.uits.brockma9.adminremove.plist
+    echo "Completed"
+    rm -f /Library/LaunchDaemons/edu.uwm.uits.brockma9.adminremove.plist
+
 fi
 
 exit 0
